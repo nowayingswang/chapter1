@@ -8,7 +8,7 @@
     <name>chapter1 Maven Webapp</name>
     <url>http://maven.apache.org</url>
 
-
+    <!--原始pom.xml文件-->
     <dependencies>
         <dependency>
             <groupId>junit</groupId>

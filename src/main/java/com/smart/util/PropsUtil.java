@@ -18,7 +18,7 @@ public class PropsUtil {
     /**
      * 加载属性文件
      */
-    public Properties loadProps(String fileName){
+    public static Properties loadProps(String fileName){
         Properties props = null;
         InputStream is = null;
 

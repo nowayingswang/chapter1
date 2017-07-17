@@ -1,7 +1,9 @@
 package com.smart.service;
 
+import com.smart.helper.DatabaseHelper;
 import com.smart.model.Customer;
 
+import java.sql.Connection;
 import java.util.List;
 import java.util.Map;
 
@@ -14,8 +16,10 @@ public class CustomerService {
     /**
      * 获取客户数据列表
      */
-    public List<Customer> getCustomerList(){
-        return null;
+    public List<Customer> getCustomerList() {
+        String sql = "SELECT * FROM customer";
+        return DatabaseHelper.queryEntityList(Customer.class, sql);
+
     }
 
     /**

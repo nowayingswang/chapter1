@@ -14,10 +14,7 @@ import javax.management.monitor.StringMonitorMBean;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Properties;
+import java.util.*;
 
 /**
  * 数据库操作助手类--不可被继承
@@ -178,7 +175,11 @@ public final class DatabaseHelper {
         String sql = "UPDATE " + getTableName(entityClass) + " SET ";
         StringBuffer columns = new StringBuffer();
         for (String fieldName : fieldMap.keySet()){
-            //TODO
+            columns.append(fieldName).append("=?, ");
         }
+        sql += columns.substring(0,columns.lastIndexOf(", ")) + " WHERE id=? ";
+
+        List<Object> paramList = new ArrayList<Object>();
+
     }
 }

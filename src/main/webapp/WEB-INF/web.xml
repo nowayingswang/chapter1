@@ -5,14 +5,14 @@
 <web-app>
     <display-name>Archetype Created Web Application</display-name>
 
-    <servlet>
-        <servlet-name>hello</servlet-name>
-        <servlet-class>com.smart.controller.HelloServlet</servlet-class>
-    </servlet>
-    <servlet-mapping>
-        <servlet-name>hello</servlet-name>
-        <url-pattern>/hello</url-pattern>
-    </servlet-mapping>
+    <!--<servlet>-->
+        <!--<servlet-name>hello</servlet-name>-->
+        <!--<servlet-class>com.smart.controller.HelloServlet</servlet-class>-->
+    <!--</servlet>-->
+    <!--<servlet-mapping>-->
+        <!--<servlet-name>hello</servlet-name>-->
+        <!--<url-pattern>/hello</url-pattern>-->
+    <!--</servlet-mapping>-->
 
     <servlet>
         <servlet-name>customers</servlet-name>

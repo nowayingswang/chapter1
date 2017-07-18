@@ -1,5 +1,6 @@
 package com.smart.helper;
 
+import com.smart.util.CollectionUtil;
 import com.smart.util.PropsUtil;
 import org.apache.commons.dbutils.QueryRunner;
 import org.apache.commons.dbutils.handlers.BeanHandler;
@@ -9,11 +10,13 @@ import org.omg.PortableServer.ThreadPolicyOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.management.monitor.StringMonitorMBean;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Properties;
 
 /**
@@ -128,9 +131,8 @@ public final class DatabaseHelper {
      */
     public static int executeUpdate(String sql,Object... params){
         int rows = 0;
-        Connection conn = getConnection();
-
         try {
+            Connection conn = getConnection();
             rows = QUERY_RUNNER.update(conn, sql, params);
         } catch (SQLException e) {
             LOGGER.error("execute update failure!!",e);
@@ -142,9 +144,41 @@ public final class DatabaseHelper {
     }
 
     /**
-     * 删除
+     * 插入实体
      */
-    public static void executeDelete(String sql,Object... params){
+    public static <T> boolean insertEntity(Class<T> entityClass,Map<String,Object> fieldMap){
+        if(CollectionUtil.isEmpty(fieldMap)){
+            LOGGER.error("can not insert entity : fieldMap is empty");
+            return false;
+        }
+        String sql = "INSERT INTO " + getTableName(entityClass);
+        StringBuffer columns = new StringBuffer("(");
+        StringBuffer values = new StringBuffer("(");
+        for(String fieldName : fieldMap.keySet()){
+            columns.append(fieldName).append(", ");
+            values.append("? ");
+        }
+        columns.replace(columns.lastIndexOf(", "),columns.length(),")");
+        values.replace(values.lastIndexOf(", "),values.length(),")");
+        sql += columns + "VALUES " + values;
 
+        Object[] params = fieldMap.values().toArray();
+        return executeUpdate(sql,params) == 1;
+    }
+
+    /**
+     * 更新实体
+     */
+    public static <T> boolean updateEntity(Class<T> entityClass,long id,Map<String,Object> fieldMap){
+        if(CollectionUtil.isEmpty(fieldMap)){
+            LOGGER.error("can not update entity : fieldMap is empty");
+            return false;
+        }
+
+        String sql = "UPDATE " + getTableName(entityClass) + " SET ";
+        StringBuffer columns = new StringBuffer();
+        for (String fieldName : fieldMap.keySet()){
+            //TODO
+        }
     }
 }

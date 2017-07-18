@@ -2,17 +2,15 @@ package com.smart.helper;
 
 import com.smart.util.CollectionUtil;
 import com.smart.util.PropsUtil;
+import org.apache.commons.dbcp2.BasicDataSource;
 import org.apache.commons.dbutils.QueryRunner;
 import org.apache.commons.dbutils.handlers.BeanHandler;
 import org.apache.commons.dbutils.handlers.BeanListHandler;
 import org.apache.commons.dbutils.handlers.MapListHandler;
-import org.omg.PortableServer.ThreadPolicyOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.management.monitor.StringMonitorMBean;
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.*;
 
@@ -22,22 +20,29 @@ import java.util.*;
  */
 public final class DatabaseHelper {
     private static final Logger LOGGER = LoggerFactory.getLogger(DatabaseHelper.class);
-    private static final String DRIVER;
-    private static final String URL;
-    private static final String USERNAME;
-    private static final String PASSWORD;
+    private static final String driver;
+    private static final String url;
+    private static final String username;
+    private static final String password;
     private static final QueryRunner QUERY_RUNNER = new QueryRunner();
     private static final ThreadLocal<Connection> CONNECTION_HOLDER = new ThreadLocal<>();
+    private static final BasicDataSource DATA_SOURCE;
 
     static {
         Properties config = PropsUtil.loadProps("config.properties");
-        DRIVER = config.getProperty("jdbc.driver");
-        URL = config.getProperty("jdbc.url");
-        USERNAME = config.getProperty("jdbc.username");
-        PASSWORD = config.getProperty("jdbc.password");
+        driver = config.getProperty("jdbc.driver");
+        url = config.getProperty("jdbc.url");
+        username = config.getProperty("jdbc.username");
+        password = config.getProperty("jdbc.password");
+
+        DATA_SOURCE = new BasicDataSource();
+        DATA_SOURCE.setDriverClassName(driver);
+        DATA_SOURCE.setUrl(url);
+        DATA_SOURCE.setUsername(username);
+        DATA_SOURCE.setPassword(password);
 
         try {
-            Class.forName(DRIVER);
+            Class.forName(driver);
         }catch (ClassNotFoundException e){
             LOGGER.error("can not load jdbc driver!!",e);
         }
@@ -48,7 +53,7 @@ public final class DatabaseHelper {
         Connection conn = CONNECTION_HOLDER.get();
         if(conn == null){
             try {
-                conn = DriverManager.getConnection(URL,USERNAME,PASSWORD);
+                conn = DATA_SOURCE.getConnection();
             } catch (SQLException e) {
                 LOGGER.error("get connection failure!!",e);
                 throw new RuntimeException(e);
@@ -59,20 +64,6 @@ public final class DatabaseHelper {
         return conn;
     }
 
-    //关闭数据库
-    private static void closeConnection(){
-        Connection conn = CONNECTION_HOLDER.get();
-        if(conn != null){
-            try {
-                conn.close();
-            } catch (SQLException e) {
-                LOGGER.error("close connection failure!",e);
-                throw new RuntimeException(e);
-            }finally {
-                CONNECTION_HOLDER.remove();
-            }
-        }
-    }
 
     /**
      * 查询实体List
@@ -85,8 +76,6 @@ public final class DatabaseHelper {
         } catch (SQLException e) {
             LOGGER.error("query entity list failure", e);
             throw new RuntimeException(e);
-        } finally {
-            closeConnection();
         }
         return entityList;
     }
@@ -102,8 +91,6 @@ public final class DatabaseHelper {
         } catch (SQLException e) {
             LOGGER.error("query entity list failure",e);
             throw new RuntimeException(e);
-        } finally {
-            closeConnection();
         }
         return entity;
     }
@@ -134,8 +121,6 @@ public final class DatabaseHelper {
         } catch (SQLException e) {
             LOGGER.error("execute update failure!!",e);
             throw new RuntimeException(e);
-        }finally {
-            closeConnection();
         }
         return rows;
     }
@@ -180,6 +165,23 @@ public final class DatabaseHelper {
         sql += columns.substring(0,columns.lastIndexOf(", ")) + " WHERE id=? ";
 
         List<Object> paramList = new ArrayList<Object>();
+        paramList.addAll(fieldMap.values());
+        paramList.add(id);
 
+        Object[] params = paramList.toArray();
+        return executeUpdate(sql,params) == 1;
     }
+
+    /**
+     * 删除实体
+     */
+    public static <T> boolean deleteEntity(Class<T> entityClass,long id){
+        String sql = "delete from " + getTableName(entityClass) + " where id=? ";
+        return executeUpdate(sql,id) == 1;
+    }
+
+    private static String getTableName(Class<?> entityClass){
+        return entityClass.getSimpleName();
+    }
+
 }
